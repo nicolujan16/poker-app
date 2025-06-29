@@ -1,0 +1,12 @@
+.settings-modal{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.settings-modal button{
+    width: 240px;
+}

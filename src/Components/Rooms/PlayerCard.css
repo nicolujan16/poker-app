@@ -1,0 +1,32 @@
+
+.player-card{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100px;
+  height: 80px;
+  border: 1px solid #4e342e;
+  border-radius: 18px;
+  background-color: #222;
+  position: absolute;
+}
+
+.admin-tag{
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  color: rgb(50, 203, 50);
+  background-color: #222;
+  padding: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  border-radius: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #eee;
+  cursor: pointer;
+  user-select: none;
+}

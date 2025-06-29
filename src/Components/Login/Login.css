@@ -1,0 +1,42 @@
+.main-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  width: 100vw;
+  height: 100vh;
+}
+
+.login-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-container input{
+  width: 300px;
+  height: 48px;
+  font-size: 16px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+}
+
+.login--mantener-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.login--mantener-container label{
+  cursor: pointer;
+}
+.login--mantener-container input{
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+}

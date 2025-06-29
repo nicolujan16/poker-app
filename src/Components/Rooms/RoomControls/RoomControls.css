@@ -1,0 +1,26 @@
+.room-controls--container{
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.room-controls--box{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding-right: 24px;
+}
+
+.room-controls--bet-bar{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-controls--bet-bar input{
+  cursor: pointer;
+}

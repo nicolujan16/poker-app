@@ -1,0 +1,11 @@
+.form--fichas-iniciales{
+  display: flex;
+  flex-direction: column;
+}
+
+.form--fichas-iniciales>label{
+  display: flex;
+  width: 100%;
+}
+
+
