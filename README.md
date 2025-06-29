@@ -1,12 +1,35 @@
-# React + Vite
+# 🃏 Online Poker Room
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time multiplayer poker web app built with React, Firebase Realtime Database, and AWS Lambda.
 
-Currently, two official plugins are available:
+This project simulates an online poker room where players can create private rooms, join ongoing games, and play poker together in real time.  
+The app handles card dealing and game logic securely on the server side using AWS Lambda, ensuring that each player only sees their own cards while the rest remain hidden.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The frontend is built with React and uses Firebase Realtime Database to keep the game state synchronized across all players.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ✨ Key Features
+- Create and join private poker rooms
+- Real-time data sync between players
+- Players can only see their own cards
+- Secure backend logic via AWS Lambda
+- Responsive user interface built with React
+
+---
+
+## ⚙️ Technologies Used
+- React
+- Firebase Realtime Database
+- AWS Lambda
+- Vite (build tool)
+
+---
+
+## 📌 Status
+This project is currently under development and planned to be deployed on a live hosting service in the future.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License.
