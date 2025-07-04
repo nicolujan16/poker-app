@@ -19,29 +19,35 @@ export default function Sala(){
   const [searchParams] = useSearchParams();
   const [players, setPlayers] = useState([])
   const [infoSala, setInfoSala] = useState({})
+  const [gameData, setGameData] = useState({})
+  const [playerCards, setPlayerCards] = useState(null);
+
   const isAdmin = user?.username === infoSala?.admin;
 
-  const [userCards, setUsersCards] = useState(null);
-
+  // suscribir a RTDB:Cards
   useEffect(() => {
     if (!infoSala.nombreSala || infoSala.roomState == 'waiting' || !user || loadingData) return;
 
     try{
       const gameDataRef = ref(RTDB, `salas/${infoSala.nombreSala}/usersCards/${user.uid}`);
       
-      // Suscribirse
+      // Suscribirse a CARTAS
       const unsubscribe = onValue(gameDataRef, (snapshot) => {
         const data = snapshot.val();
-        setUsersCards(data);
+        setPlayerCards(data);
       });
-      
       
       // Cleanup: desuscribirse
       return () => {
         off(gameDataRef, "value", unsubscribe);
       };
     }catch(err){
-      console.log(err)
+      Swal.fire({
+        title: "Error obteniendo cartas",
+        text: err,
+        background: "#222",
+        color: "#fff"
+      })
     }
 
 
@@ -67,7 +73,7 @@ export default function Sala(){
     return () => unsubscribe()
   }, [navigate])
 
-  // conectarse a sala
+  // suscribir a RTDB:Sala
   useEffect(() => {
     const salaID = searchParams.get('id')
     if (!salaID) {
@@ -113,10 +119,42 @@ export default function Sala(){
     }
   }, [searchParams, navigate])
 
+  // // suscribir a RTDB:GameData
+   useEffect(() => {
+    const salaID = searchParams.get('id')
+    if (!salaID) {
+      navigate('/')
+      return
+    }
+    // Referencia a gameData
+    const gameDataRef = ref(RTDB, `salas/${salaID}/gameData`)
+
+    const unsubscribe = onValue(gameDataRef, (snapshot) => {
+      let dataGame = snapshot.val()
+      if (dataGame) {
+        setGameData(dataGame)
+      }
+    }, (error) => {
+      console.error(error)
+      Swal.fire({
+        icon: "error",
+        title: "Error de conexión",
+        text: "No se pudo conectar con la sala.",
+        background: "#222",
+        color: "#fff"
+      })
+    })
+
+    // Cleanup
+    return () => {
+      off(gameDataRef, 'value', unsubscribe)
+    }
+  }, [searchParams, navigate, infoSala.roomState])
+
+  // Ordenar jugadores para que nosotros estemos abajo al medio siempre
   useEffect(() => {
     if (!players || players.length === 0 || !user) {
       return
-    
     };
     
     const index = players.findIndex(p => p.userUID === user.uid);
@@ -241,15 +279,12 @@ export default function Sala(){
 
   const handleStartGame = async (e) => {
     e.preventDefault()
+    // FUNCION PARA INICIAR SALA...
     startGame({
       roomID: infoSala.nombreSala
     })
     .then(data => {
-      if(data.status == 200){
-        console.log('peticion exitosa')
-        console.log(data)
-      }else{
-        console.log(data)
+      if(data.status != 200){
         Swal.fire({
           title: "Error iniciando juego. Intente nuevamente.",
           text: data.message,
@@ -271,27 +306,33 @@ export default function Sala(){
       </button>
       <div className="main-table--container">
         {
-          players.map((player, index) => (
+          players.map((player, playerIndex) => (
             <PlayerCard
-              key={index}
+              key={playerIndex}
               players={players}
               player={player}
-              index={index}
+              playerIndex={playerIndex}
+              playerCards={playerIndex === 0 ? playerCards : false}
+              infoSala={infoSala}
+              gameData={gameData || false}
             />
         ))}
       </div>
+      {/* ----RoomState: waiting---- */}
       {
-        infoSala.roomState == 'waiting' ?
+        infoSala.roomState == 'waiting' &&
         <div className="room-waiting-players--container">
           <div className="room-waiting-players--box">
              <p>
+
                 {
-                  infoSala.users.length == infoSala.maxPlayers ?
-                   <>Esperando admin para iniciar partida</>
-                   :
-                  <>
-                   Esperando jugadores... {infoSala.users.length}/{infoSala.maxPlayers} 
-                  </>
+                  infoSala?.users?.length == infoSala?.maxPlayers ?
+                    <>Esperando admin para iniciar partida</>
+                    :
+                    <>
+                    Esperando jugadores... {infoSala.users.length}/{infoSala.maxPlayers} 
+                    </>
+                
                 }
              </p> 
             {
@@ -302,11 +343,15 @@ export default function Sala(){
             }
           </div>
         </div>
-        :
-        <RoomControls 
-        infoSala={infoSala}
-        players={players}
-        />
+      }
+      {/* ----RoomState: preflop---- */}
+      {
+        infoSala.roomState !== 'waiting' &&
+          <RoomControls 
+          infoSala={infoSala}
+          players={players}
+          user={user}
+          />
       }
     </div>
   )

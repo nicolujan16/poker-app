@@ -1,18 +1,10 @@
-const playersPosition = {
-  1: [
-    { 
-      top: "calc(100%)",
-      right: "calc(50% - 80px)"
-    }
-  ],
+const playersBetPosition = {
   2: [
     { 
-      top: "calc(100%)",
-      right: "calc(50% - 80px)"
+      top: "-140px",
     },
     {
-      top: "calc(0px - 60px)",
-      right: "calc(50% - 80px)"
+      top: "140px",
     }
   ],
   3: [
@@ -99,5 +91,5 @@ const playersPosition = {
 }
 
 
-export default playersPosition
+export default playersBetPosition
 

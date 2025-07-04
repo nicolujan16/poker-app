@@ -16,6 +16,7 @@
   box-shadow: 0 0 0 20px #4e342e;
   position: relative;
   margin: 40px;
+  z-index: 20;
 }
 
 .back-to-lobby--btn {
@@ -38,6 +39,7 @@
 
 .room-waiting-players--container{
   position: absolute;
+  z-index: 999;
 }
 
 .room-waiting-players--box{

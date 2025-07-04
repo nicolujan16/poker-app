@@ -1,18 +1,12 @@
-const playersPosition = {
-  1: [
-    { 
-      top: "calc(100%)",
-      right: "calc(50% - 80px)"
-    }
-  ],
+const buttonPosition = {
   2: [
     { 
-      top: "calc(100%)",
-      right: "calc(50% - 80px)"
+      top: "-108px",
+      left: "80%"
     },
     {
-      top: "calc(0px - 60px)",
-      right: "calc(50% - 80px)"
+      top: "108px",
+      right: "80%"
     }
   ],
   3: [
@@ -99,5 +93,5 @@ const playersPosition = {
 }
 
 
-export default playersPosition
+export default buttonPosition
 

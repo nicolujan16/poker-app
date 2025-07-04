@@ -1,11 +1,10 @@
-
 .player-card{
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  width: 100px;
-  height: 80px;
+  width: 160px;
+  height: 60px;
   border: 1px solid #4e342e;
   border-radius: 18px;
   background-color: #222;
@@ -29,4 +28,120 @@
   border: 1px solid #eee;
   cursor: pointer;
   user-select: none;
+}
+
+/* Cartas propias */
+
+.card-front--container{
+  width: 142px;
+  height: 100px;
+  display: flex;
+  position: absolute;
+  bottom: 50%;
+  z-index: -9;
+  cursor: pointer;
+}
+
+.card-front--container div:last-child{
+  left: 50%;
+}
+.card-front--container:hover{
+  z-index: 100;
+}
+
+.card-front{
+  border-radius: 8px;
+  overflow: hidden;
+  position: absolute;
+  width: 70.769px;
+  height: 99.25px;
+  background-image: url('../../assets/mazoPoker.png');
+  background-size: '920px 397px';
+}
+
+
+
+
+/* Cartas de otros usuarios */
+.card-back--container{
+  display: flex;
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+}
+
+.card-back--container img{
+  height: 80px;
+}
+
+.card-back--container img:first-child{
+  transform: rotate(10deg)
+}
+.card-back--container img:last-child{
+  transform: rotate(-10deg);
+}
+
+
+/* timer para el turno */
+.turn-timer {
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  height: 4px;
+  width: 80%;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.2);
+  overflow: hidden;
+}
+
+
+
+.turn-timer-bar{
+  height: 100%;
+  background-color: white;
+  transition: width 0.5 linear;
+}
+
+
+/* dealer button */
+
+.dealer-button{
+  position: absolute;
+  background-color: aliceblue;
+  color: #222;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 2px solid #4e342e;
+  font-weight: bold;
+  user-select: none;
+  cursor: pointer;
+}
+
+/* player bet */
+
+.player-bet{
+  font-size: 20px;
+  position: absolute;
+  top: -140px;
+  z-index: 9999;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  text-align: center;
+  line-height: 90%;
+  border-radius: 12px;
+  background-color: rgba(0,0,0,0.5);
+  padding: 4px 8px;
+  gap: 8px;
+}
+
+.player-bet-svg {
+  width: 24px;
+  height: 24px;
+  z-index: 9999;
+  border-radius: 12px 0 0 12px;
 }

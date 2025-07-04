@@ -1,21 +1,24 @@
 import { useState } from "react"
 import './RoomControls.css'
 
-export default function RoomControls({infoSala, players}){
-  const [gameState, setGameState] = useState({
-    hasBet: true,
-    canCheck: true,
-    callAmount: 2000,
-    raiseTo: 2000*2,
-    isAllInAvailable: true
-  })
+export default function RoomControls({infoSala, user}){
+
   const [betBar, setBetBar] = useState(infoSala.smallBlind)
-  const [fichasRestantes, setFichasRestantes] = useState(2000)
+  const [hasBet, setHasBet] = useState(false)
 
   const handleBetChange = (e) => {
     e.preventDefault()
-    const valor = Number(e.target.value)
+    let valor
+    if(e.target.innerText == 'All-In'){
+      valor = Number(user.fichasInGame)
+    }else{
+      valor = Number(e.target.value)
+    }
     setBetBar(valor)
+  }
+
+  const handleAction = () => {
+    
   }
 
   return(
@@ -24,23 +27,27 @@ export default function RoomControls({infoSala, players}){
         <div className="room-controls--bets-btn">
         </div>
         <div className="room--controls--action-btns">
-          {gameState.hasBet ?
+          <div>
+
+          {
+            hasBet ?
             <>
-              <button>Fold</button>
               <button>Call</button>
               <button>Raise</button>
             </>
-          :
+            :
             <>
               <button>Check</button>
               <button>Bet {betBar}</button>
             </>
           }
-          <button>All-In</button>
+          <button onClick={handleBetChange}>All-In</button>
+          <button>Fold</button>
+          </div>
           <div className="room-controls--bet-bar">
             <label htmlFor="bet-bar">{betBar}</label>
             <input type="range" name="bet-bar" id="bet-bar" 
-            min={infoSala.smallBlind} max={fichasRestantes}
+            min={infoSala.smallBlind} max={user.fichasInGame}
             onChange={handleBetChange} value={betBar} step={5}/>
           </div>
         </div>

@@ -24,3 +24,23 @@
 .room-controls--bet-bar input{
   cursor: pointer;
 }
+
+.room--controls--action-btns{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.room--controls--action-btns div:first-child{
+  display: flex;
+  gap: 4px;
+}
+
+.room--controls--action-btns div:first-child button{
+  border: 1px solid #444;
+}
+
+.room--controls--action-btns div:first-child button:hover{
+  border: 1px solid #fff;
+}
+

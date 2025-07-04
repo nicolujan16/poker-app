@@ -22,7 +22,7 @@ export default function CrearSalaModal({user}) {
 				username: user.username,
 				userUID: user.uid,
 				isAdmin: true,
-				moneyInGame: 1000
+				fichasInGame: 1000
 			}
 		],
 		roomState: "waiting"
@@ -94,9 +94,9 @@ export default function CrearSalaModal({user}) {
 		}
 	
 		if(e.target.id == 'buyInMin'){
-			if(e.target.value > form.users[0].moneyInGame){
+			if(e.target.value > form.users[0].fichasInGame){
 				let newUsers = form.users[0]
-				newUsers.moneyInGame = +e.target.value
+				newUsers.fichasInGame = +e.target.value
 				setForm({
 					...form,
 					[e.target.id]: +e.target.value,
@@ -115,13 +115,13 @@ export default function CrearSalaModal({user}) {
 			return
 		}
 		
-		if(e.target.id == 'moneyInGame'){
+		if(e.target.id == 'fichasInGame'){
 			setForm({
 				...form,
 				users: [
 					{
 						...form.users[0],
-						moneyInGame: +e.target.value
+						fichasInGame: +e.target.value
 					}
 				]
 			})
@@ -176,9 +176,9 @@ export default function CrearSalaModal({user}) {
 				}
 			</div>
 			<div>
-				<label htmlFor="moneyInGame">Fichas iniciales para ti</label>
-				<input type="number" id="moneyInGame" min={form.buyInMin} max={form.buyInMax}
-				value={form.users[0].moneyInGame} required onChange={handleInputChange}/>
+				<label htmlFor="fichasInGame">Fichas iniciales para ti</label>
+				<input type="number" id="fichasInGame" min={form.buyInMin} max={form.buyInMax}
+				value={form.users[0].fichasInGame} required onChange={handleInputChange}/>
 			</div>
 			<button>Crear Sala</button>
 		
