@@ -11,8 +11,8 @@ const buttonPosition = {
   ],
   3: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "-108px",
+      left: "80%"
     },
     {
       top: "calc(0px)",
@@ -25,8 +25,8 @@ const buttonPosition = {
   ],
   4: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "-108px",
+      left: "80%"
     },
     {
       top: "calc(50% - 40px)",
@@ -43,9 +43,9 @@ const buttonPosition = {
 
   ],
   5: [
-    { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+     { 
+      top: "-108px",
+      left: "80%"
     },
     {
       top: "calc(50% - 40px)",
@@ -66,12 +66,12 @@ const buttonPosition = {
   ],
   6: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "-108px",
+      left: "80%"
     },
     {
-      top: "calc(100% - 140px)",
-      right: "calc(100% - 100px)"
+      top: "-12px",
+      right: "-12px"
     },
     {
       top: "calc(0%)",

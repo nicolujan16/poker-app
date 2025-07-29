@@ -38,7 +38,7 @@ export async function leaveSala({roomID}){
   }
 }
 
-export async function joinRoom({ user, roomID, buyIn }) {
+export async function joinRoom({ user, roomID, buyIn, password}) {
   try {
     const tuToken = await auth.currentUser.getIdToken();
     if (!user || !user.uid || !roomID || !buyIn) {
@@ -54,6 +54,7 @@ export async function joinRoom({ user, roomID, buyIn }) {
         roomName: roomID,
         userUID: user.uid,
         moneyInGame: buyIn,
+        password: password,
         token: tuToken,
         method: "joinRoom"
       })
@@ -124,7 +125,8 @@ export async function createRoom({formToCreate, user}) {
     buyInMin: salaNueva.buyInMin,
     buyInMax: salaNueva.buyInMax,
     smallBlind: salaNueva.smallBlind,
-    usersList: [user.username]
+    usersList: [user.username],
+    isPrivate: salaNueva.isPrivate
   }
 
   // Ahora le vamos a pasar nuestra sala nueva a la APIURL

@@ -48,3 +48,39 @@
   font-size: 18px;
   gap: 12px;
 }
+
+
+/* pot-info-container */
+
+.cards-nd-pot--info-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  z-index: 9999999;
+  top: 30%;
+  width: 50%;
+  height: 130px;
+}
+
+.public-cards--container{
+  display: flex;
+  gap: 12px;
+  width: 450px;
+  height: 130px;
+  z-index: 999999;
+}
+
+.public-cards--container div{
+  width: 70.769px;
+  height: 99.25px;
+  background-image: url('../../assets/mazoPoker.png');
+  border-radius: 12px;
+  transform: scale(1.1);
+}
+
+.cards-nd-pot--info-container p{
+  padding-bottom: 4px;
+}
+

@@ -1,91 +1,82 @@
 const playersBetPosition = {
   2: [
     { 
-      top: "-140px",
+      top: "-120px",
     },
     {
-      top: "140px",
+      top: "80px",
     }
   ],
   3: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "-128px",
     },
     {
-      top: "calc(0px)",
-      right: "calc(100% - 100px)"
+      top: "80px",
+      right: "-8px"
     },
     {
-      top: "calc(0px)",
-      right: "calc(0px)"
+      top: "80px",
+      left: "-8px"
     }
   ],
   4: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "-128px",
     },
     {
-      top: "calc(50% - 40px)",
-      right: "calc(100% - 50px)"
+      top: "calc(50% - 16px)",
+      right: "-80px"
     },
     {
-      top: "calc(0px - 40px)",
-      right: "calc(50% - 50px)"
+      top: "128px",
     },
     {
-      top: "calc(50% - 40px)",
-      right: "calc(0px - 50px)"
+      top: "calc(50% - 16px)",
+      left: "-80px"
     }
-
   ],
   5: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "-128px",
+    },
+    { 
+      top: "calc(50% - 16px)",
+      left: "168px"
     },
     {
-      top: "calc(50% - 40px)",
-      right: "calc(100% - 50px)"
+      top: "128px",
     },
     {
-      top: "calc(0px - 40px)",
-      right: "calc(70% - 50px)"
+      top: "128px",
     },
     {
-      top: "calc(0% - 40px)",
-      right: "calc(30% - 50px)"
+      top: "calc(50% - 16px)",
+      right: "168px"
     },
-    {
-      top: "calc(50% - 40px)",
-      right: "calc(0px - 50px)"
-    }
   ],
   6: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "-128px",
+    },
+    { 
+      top: "-48px",
+      left: "110px"
     },
     {
-      top: "calc(100% - 140px)",
-      right: "calc(100% - 100px)"
+      top: "128px",
+      left: "110px"
     },
     {
-      top: "calc(0%)",
-      right: "calc(100% - 100px)"
+      top: "128px",
     },
     {
-      top: "calc(0% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "128px",
+      right: "110px"
     },
     {
-      top: "calc(0%)",
-      right: "calc(0% + 0px)"
-    },
-    {
-      top: "calc(100% - 140px)",
-      right: "calc(0% + 0px)"
+      top: "-48px",
+      right: "110px"
     },
   ],
 }

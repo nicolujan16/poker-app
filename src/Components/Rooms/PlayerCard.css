@@ -11,6 +11,8 @@
   position: absolute;
 }
 
+/* Si foldeo aplicamos estos estilos */
+
 .admin-tag{
   position: absolute;
   bottom: -8px;
@@ -28,6 +30,23 @@
   border: 1px solid #eee;
   cursor: pointer;
   user-select: none;
+}
+
+/* player fichas */
+
+.player-fichas{
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, .3);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.player-fichas svg{
+  height: 16px;
+  width: 16px;
 }
 
 /* Cartas propias */
@@ -60,14 +79,12 @@
 }
 
 
-
-
 /* Cartas de otros usuarios */
 .card-back--container{
   display: flex;
   position: absolute;
   z-index: -1;
-  top: 50%;
+  bottom: 20px;
 }
 
 .card-back--container img{
@@ -75,10 +92,20 @@
 }
 
 .card-back--container img:first-child{
-  transform: rotate(10deg)
+  transform: rotate(-8deg);
 }
 .card-back--container img:last-child{
-  transform: rotate(-10deg);
+  transform: rotate(8deg)
+}
+
+/* Usuarios foldeados */
+
+.player-card--folded p:first-child::after{
+  content: " (Fold)";
+}
+
+.card-back--folded{
+  display: none;  
 }
 
 
@@ -93,7 +120,6 @@
   background: rgba(255,255,255,0.2);
   overflow: hidden;
 }
-
 
 
 .turn-timer-bar{
@@ -145,3 +171,4 @@
   z-index: 9999;
   border-radius: 12px 0 0 12px;
 }
+

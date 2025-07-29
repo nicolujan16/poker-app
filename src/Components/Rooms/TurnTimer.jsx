@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import './PlayerCard.css'
 
-export default function TurnTimer({ turnInit }) {
-  const [remaining, setRemaining] = useState(30);
-  const turnDuration = 30 * 1000;
+export default function TurnTimer({ turnInit, turnDuration }) {
+  const [remaining, setRemaining] = useState(40);
 
   useEffect(() => {
     if (!turnInit) return;
@@ -23,7 +22,7 @@ export default function TurnTimer({ turnInit }) {
     <div className="turn-timer">
       <div 
         className="turn-timer-bar"
-        style={{ width: `${(remaining / 30) * 100}%` }}
+        style={{ width: `${(remaining / 40) * 100}%` }}
       ></div>
     </div>
   );

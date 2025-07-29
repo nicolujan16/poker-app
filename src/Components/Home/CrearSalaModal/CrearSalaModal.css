@@ -8,4 +8,34 @@
   width: 100%;
 }
 
+.form--div{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 
+.form--div label{
+  width: 100%;
+  text-align: start;
+}
+
+.form--div input{
+  align-self: flex-start;
+}
+
+/* inputs type range (className: simple-slider) */
+
+.simple-slider{
+  width: 50%;
+  cursor: pointer;
+}
+
+.form--div svg{
+  width: 20px;
+  height: 20px;
+}
+
+.fichas-iniciales--fichas{
+  width: 20px;
+  display: flex;
+}

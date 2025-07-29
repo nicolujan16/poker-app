@@ -11,28 +11,28 @@ const playersPosition = {
       right: "calc(50% - 80px)"
     },
     {
-      top: "calc(0px - 60px)",
+      top: "0px",
       right: "calc(50% - 80px)"
     }
   ],
   3: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "calc(100%)",
+      right: "calc(50% - 80px)"
     },
     {
-      top: "calc(0px)",
-      right: "calc(100% - 100px)"
+      top: "40px",
+      right: "calc(100% - 150px)"
     },
     {
-      top: "calc(0px)",
-      right: "calc(0px)"
+      top: "40px",
+      left: "calc(100% - 150px)"
     }
   ],
   4: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "calc(100%)",
+      right: "calc(50% - 80px)"
     },
     {
       top: "calc(50% - 40px)",
@@ -50,8 +50,8 @@ const playersPosition = {
   ],
   5: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "calc(100%)",
+      right: "calc(50% - 80px)"
     },
     {
       top: "calc(50% - 40px)",
@@ -72,8 +72,8 @@ const playersPosition = {
   ],
   6: [
     { 
-      top: "calc(100% - 40px)",
-      right: "calc(50% - 50px)"
+      top: "calc(100%)",
+      right: "calc(50% - 80px)"
     },
     {
       top: "calc(100% - 140px)",
