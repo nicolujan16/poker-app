@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import './RoomControls.css'
 import { userAction } from "../../../logic/engine"
 
@@ -8,17 +8,36 @@ export default function RoomControls({infoSala, user, gameData}){
   const [ourBet, setOurBet] = useState(0)
   const [isTurn, setIsTurn] = useState(false)
   const [fichasRestantes, setFichasRestantes] = useState()
-  const [hasBet, setHasBet] = useState(false)
+  let hasBet = gameData.hasBet || false
 
+  // Bet bar scroll function
+  const betBarRef = useRef()
   useEffect(() => {
-    if(gameData?.currentBet == ourBet && gameData.hasBet){
-      setHasBet(false)
-      return
-    }else{
-      setHasBet(gameData.hasBet)
-    }
-  },[gameData, ourBet])
+    const handleScroll = (e) => {
+      e.preventDefault()
+      if (!isTurn) return
 
+      const delta = Math.sign(e.deltaY)
+      setBetBar(prev => {
+        let newValue = delta > 0 ? prev - 5 : prev + 5
+        newValue = Math.max(infoSala.smallBlind, Math.min(fichasRestantes, newValue))
+        return newValue
+      })
+    }
+
+    const betbar = betBarRef.current
+    if (betbar) {
+      betbar.addEventListener('wheel', handleScroll, { passive: false })
+    }
+
+    return () => {
+      if (betbar) {
+        betbar.removeEventListener('wheel', handleScroll)
+      }
+    }
+  }, [isTurn, infoSala.smallBlind, fichasRestantes])
+
+  // Verify turn
   useEffect(() =>{
     let playerTurn = gameData?.infoUsers?.filter(p => p.isTurn)
     if(playerTurn?.length > 0){
@@ -30,26 +49,25 @@ export default function RoomControls({infoSala, user, gameData}){
     }
   },[gameData.infoUsers, user])
 
-  useEffect(() => {
-    if(gameData?.bets?.length > 0){
-      let filteredBet = gameData.bets?.filter(bet => {
-        return bet.username == user.username
-      })
-      if(filteredBet?.length > 0){        
-        setOurBet(filteredBet[0].amount)
-      }
-    }
-  },[gameData, user])
-
+  // setFichasRestantes
   useEffect(() => {
     let player = gameData?.infoUsers?.filter((u) => {
       return u.username == user.username
-    } )
+    })
     if(player){
       setFichasRestantes(player[0].fichasInGame)
     }
 
   },[gameData, user])
+
+  // Settear ourBet
+  useEffect(()=>{
+    let userIndex = gameData.infoUsers?.findIndex(u => u.username == user.username)
+    if(userIndex != undefined && userIndex != -1){
+      setOurBet(gameData?.infoUsers[userIndex]?.bet || 0)
+    }
+  },[gameData, user])
+
 
   const handleBetChange = (e) => {
     e.preventDefault()
@@ -75,11 +93,6 @@ export default function RoomControls({infoSala, user, gameData}){
     let action = e.target.innerText.split(" ")[0]
     let monto = e.target.innerText.split(" ")[1]
 
-    if(action == 'Raise'){
-      monto = monto - ourBet
-      console.log(monto)
-    }
-
     userAction({
       roomID: infoSala.nombreSala,
       action,
@@ -102,10 +115,19 @@ export default function RoomControls({infoSala, user, gameData}){
         <div className="room--controls--action-btns">
           <div>
           {
-            hasBet ?
+            (hasBet && gameData.currentBet != ourBet) ?
             <>
-              <button disabled={!isTurn} onClick={handleAction}>Call {Number(gameData.currentBet) - ourBet}</button>
-   
+              <button 
+                disabled={!isTurn}
+                onClick={handleAction}
+              >
+                {
+                  user.fichasInGame < gameData.currentBet ?
+                  `Call ${gameData.infoUsers.filter(u=>u.username == user.username)[0].fichasInGame}`:
+                  `Call ${Number(gameData.currentBet) - ourBet}`
+                }
+              </button>
+  
               <button disabled={!isTurn || gameData.currentBet >= betBar} onClick={handleAction}>Raise {betBar}</button>
             
           
@@ -114,6 +136,8 @@ export default function RoomControls({infoSala, user, gameData}){
             <>
               <button disabled={!isTurn} onClick={handleAction}>Check</button>
               <button disabled={!isTurn} onClick={handleAction}>Bet {betBar}</button>
+               
+              
             </>
           }
           <button disabled={!isTurn} onClick={handleBetChange} className="room-control--all-in--btn">All-In</button>
@@ -123,9 +147,18 @@ export default function RoomControls({infoSala, user, gameData}){
           </div>
           <div className="room-controls--bet-bar">
             <input type="number" value={betBar} onChange={handleBetBarInputChange}/>
-            <input disabled={!isTurn} type="range" name="bet-bar" id="bet-bar" 
-            min={infoSala.smallBlind} max={fichasRestantes}
-            onChange={handleBetChange} value={betBar} step={5}/>
+            <input 
+              disabled={!isTurn}
+              type="range"
+              name="bet-bar" 
+              id="bet-bar" 
+              min={infoSala.smallBlind} 
+              max={fichasRestantes}
+              onChange={handleBetChange} 
+              value={betBar}
+              step={5}
+              ref={betBarRef}  
+            />
           </div>
         </div>
       </div>

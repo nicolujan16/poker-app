@@ -2,7 +2,7 @@ import playersPosition from "../../utils/playersPosition"
 import './PlayerCard.css'
 import cardBack from '../../assets/card-back.png'
 import {cardsPosition} from '../../utils/cardImagePosition.js'
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 // import buttonPosition from "../../utils/buttonPosition.js"
 import TurnTimer from "./TurnTimer.jsx"
 import playersBetPosition from "../../utils/playersBetPosition.js"
@@ -17,12 +17,34 @@ export default function PlayerCard({
   gameData
 }){
   const [isDealer, setIsDealer] = useState(false)
-  const [playerBet, setPlayerBet] = useState(0)
   const [gameDataPlayer, setGameDataPlayer] = useState({})
+  const [playerBet, setPlayerBet] = useState(player.bet || 0)
+  const [lastWinnerCards, setLastWinnerCards] = useState([])
+  const roomWaiting = (infoSala.roomState == 'waiting' || infoSala.roomState == 'starting')
+  const isAnotherPlayer = (!playerCards && !roomWaiting)
 
 
-  // Si ya hubo una mano, mostrar las cartas del ganador
-  
+  // setShowLastWinnerIfRoomWaiting
+  useEffect(() => {
+    if(infoSala.roomState == 'waiting'){
+      let lastWinnerCards = gameData?.lastWinner?.userCards
+      if(lastWinnerCards != undefined){
+        if(gameData?.lastWinner?.username == player.username ){
+          setLastWinnerCards(lastWinnerCards)
+        }
+      }
+    }else{
+      setLastWinnerCards([])
+    }
+  }, [gameData, infoSala.roomState, player])
+
+  // SetPlayerBet
+  useEffect(()=>{
+    let userFiltered = gameData?.infoUsers?.filter(u => u.username == player.username)
+    if(userFiltered != undefined){
+      setPlayerBet(userFiltered[0].bet)
+    }
+  },[gameData, player])
 
   // Filtrar la data del jugador actual
   useEffect(() => {
@@ -43,21 +65,6 @@ export default function PlayerCard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameData, player])
 
-  const roomWaiting = (infoSala.roomState == 'waiting' || infoSala.roomState == 'starting')
-
-  useEffect(() => {
-    if(gameData?.bets?.length > 0){
-      const filtered = gameData?.bets?.filter(bet => bet.username == player.username)
-      if(filtered?.length > 0){
-        setPlayerBet(Number(filtered[0].amount))
-      }else{
-        setPlayerBet(0)
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[gameData])
-
-  const isAnotherPlayer = (!playerCards && !roomWaiting)
 
   return(
     <div 
@@ -108,6 +115,30 @@ export default function PlayerCard({
           </div>
       }
 
+      {/* Si la sala esta waiting y hay un ganador anterior mostramos sus cartas */}
+      {
+        (
+          infoSala.roomState == 'waiting'&& 
+          lastWinnerCards.length > 0 &&
+          gameData.lastWinner.username == player.username
+        )? 
+          <div className={gameDataPlayer.hasFolded ? "card-front--container card-front--folded" : "card-front--container"}>
+            {
+              lastWinnerCards.map(card => (
+                <div
+                key={card}
+                className="card-front"
+                style={{
+                  ...cardsPosition[card] 
+                }}
+                ></div>
+              ))        
+            }
+          </div>
+        :
+          <></>
+      }
+
       {/* cartas que vemos */}
       {
         playerCards &&
@@ -137,13 +168,12 @@ export default function PlayerCard({
 
       {/* boton de dealer */}
       {
-        (!roomWaiting && isDealer) && 
+        (isDealer) && 
           <div 
             className="dealer-button"
             title="Boton de Dealer"
             style={
               {top: "-12px", right:"-12px"}
-              // buttonPosition[players.length][playerIndex] || {}
             }
           >B</div>
       }
