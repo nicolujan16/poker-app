@@ -1,9 +1,3 @@
-# privateData
-src/lambdaURL.js
-
-# firebaseConfig
-src/firebaseConfig.js
-
 # dependencies
 /node_modules
 /.pnp
