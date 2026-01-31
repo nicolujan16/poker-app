@@ -35,8 +35,10 @@ const UserHeader = ({ onChipsClick }) => {
 			background: "#1e2939",
 			color: "#eee",
 		}).then((res) => {
-			if (res.isConfirmed) logout();
-			return;
+			if (res.isConfirmed)
+				logout().then(() => {
+					window.location.reload();
+				});
 		});
 	};
 
