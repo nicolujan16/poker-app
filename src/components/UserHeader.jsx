@@ -11,6 +11,20 @@ const UserHeader = ({ onChipsClick }) => {
 
 	const handleLogout = (e) => {
 		e.preventDefault();
+
+		if (user.isGuest) {
+			Swal.fire({
+				icon: "question",
+				title: "¿Cerrar Sesión?",
+				text: "Todos los datos de esta cuenta se eliminaran, para que eso no pase, cree una cuenta desde el Lobby",
+				showConfirmButton: true,
+				confirmButtonText: "Confirmar",
+				showCancelButton: true,
+				cancelButtonText: "Cancelar",
+				background: "#1e2939",
+				color: "#eee",
+			});
+		}
 		Swal.fire({
 			icon: "question",
 			title: "¿Cerrar Sesión?",

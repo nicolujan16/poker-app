@@ -63,7 +63,10 @@ export async function joinRoom({ user, roomID, buyIn, password }) {
 		}
 
 		const respuesta = await peticion.json();
-		return respuesta;
+		return {
+			status: 200,
+			respuesta: respuesta,
+		};
 	} catch (error) {
 		return { error: true, message: error.message };
 	}
@@ -163,6 +166,39 @@ export async function createRoom({ formToCreate, user }) {
 		return {
 			status: 500,
 			message: `${error}`,
+		};
+	}
+}
+
+export async function deleteGuest() {
+	try {
+		const tuToken = await auth.currentUser.getIdToken();
+		const peticion = await fetch(API_URL, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				token: tuToken,
+				method: "deleteGuestUser",
+			}),
+		});
+
+		if (!peticion.ok) {
+			const res = await peticion.json();
+			throw new Error(res.message);
+		}
+
+		const respuesta = await peticion.json();
+
+		return {
+			status: 200,
+			...respuesta,
+		};
+	} catch (err) {
+		return {
+			status: 500,
+			message: `${err}`,
 		};
 	}
 }

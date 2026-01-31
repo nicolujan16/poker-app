@@ -13,6 +13,8 @@ import LobbyButton from "../components/LobbyButton";
 import ChipsModal from "../components/ChipsModal";
 import CreateRoomModal from "../components/CreateRoomModal";
 import JoinRoomModal from "../components/JoinRoomModal";
+import DashboardInfo from "../components/DashboardInfo.jsx";
+import LoadingScreen from "../components/LoadingScreen";
 
 export default function HomePage() {
 	const [isChipsModalOpen, setIsChipsModalOpen] = useState(false);
@@ -21,11 +23,6 @@ export default function HomePage() {
 
 	const [loading, setLoading] = useState(true);
 	const [user, setUser] = useState("");
-	// const [crearSalaModal, setCrearSalaModal] = useState(false);
-	// const [listaSalaModalState, setListaSalaModalState] = useState(false);
-	// const [settingsModal, setSettingsModal] = useState(false);
-	// const [mostrarFichasModal, setMostrarFichasModal] = useState(false);
-	// const [salas, setSalas] = useState([{ cargando: true }]);
 	const navigate = useNavigate();
 
 	// Verificamos que la sesión este iniciada, en caso de que no lo volvemos al login.
@@ -56,23 +53,19 @@ export default function HomePage() {
 		console.log(e);
 	};
 
-	const handleCreateRoomClick = (e) => {
-		e.preventDefault();
+	const handleCreateRoomClick = () => {
+		setIsJoinRoomModalOpen(false);
 		setIsCreateRoomModalOpen(true);
 	};
 
 	const handleJoinRoomClick = (e) => {
 		e.preventDefault();
+		setIsJoinRoomModalOpen(true);
 	};
 
 	// Pantalla de carga...
 	if (loading) {
-		return (
-			<div className="loading-spinner--container">
-				<div className="loading-spinner"></div>
-				<p>Cargando datos...</p>
-			</div>
-		);
+		return <LoadingScreen message="Entrando a Pokernauta..." />;
 	}
 
 	return (
@@ -129,7 +122,7 @@ export default function HomePage() {
 						className="text-center mb-16 relative z-10"
 					>
 						<h1 className="text-5xl font-bold text-white mb-4">
-							Bienvenido al Lobby
+							Bienvenido a Pokernauta!
 						</h1>
 						<p className="text-gray-400 text-xl">Elige tu próxima jugada</p>
 					</motion.div>
@@ -159,7 +152,7 @@ export default function HomePage() {
 					</motion.div>
 
 					{/* Stats or Info Section */}
-					<motion.div
+					{/* <motion.div
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{ delay: 0.4 }}
@@ -183,7 +176,8 @@ export default function HomePage() {
 								</p>
 							</motion.div>
 						))}
-					</motion.div>
+					</motion.div> */}
+					<DashboardInfo />
 				</main>
 
 				<ChipsModal
@@ -200,6 +194,7 @@ export default function HomePage() {
 
 				<JoinRoomModal
 					isOpen={isJoinRoomModalOpen}
+					onCreateRoom={handleCreateRoomClick}
 					onClose={() => setIsJoinRoomModalOpen(false)}
 				/>
 			</div>

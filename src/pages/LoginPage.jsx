@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet";
 import Swal from "sweetalert2";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
-import { Spade, Heart } from "lucide-react";
+import { Spade, Heart, Gamepad2 } from "lucide-react"; // <--- Agregue Gamepad2
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,11 @@ export default function LoginPage() {
 		password: "",
 		confirmPassword: "",
 	});
-	const { verifyUsername, currentUser, login, signup } = useAuth();
+
+	const { verifyUsername, currentUser, login, signup, loginAsGuest } =
+		useAuth();
+
+	const [loadingGuest, setLoadingGuest] = useState(false);
 
 	const navigate = useNavigate();
 	useEffect(() => {
@@ -128,6 +132,19 @@ export default function LoginPage() {
 		}
 	};
 
+	const handleGuestLogin = async () => {
+		setLoadingGuest(true);
+		const result = await loginAsGuest();
+		if (!result.success) {
+			Swal.fire({
+				icon: "error",
+				title: "Error creando usuario",
+				text: result.error,
+			});
+		}
+		setLoadingGuest(false);
+	};
+
 	return (
 		<>
 			<Helmet>
@@ -191,7 +208,9 @@ export default function LoginPage() {
 						</div>
 
 						{/* Tabs */}
-						<div className="p-6">
+						<div className="p-6 pb-0">
+							{" "}
+							{/* Reduje el padding inferior aquí */}
 							<Tabs defaultValue="login" className="w-full">
 								<TabsList className="grid w-full grid-cols-2 bg-gray-800 p-1 rounded-lg mb-6">
 									<TabsTrigger
@@ -272,7 +291,7 @@ export default function LoginPage() {
 
 										<Button
 											type="submit"
-											className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900 font-bold py-6 text-lg shadow-lg hover:shadow-amber-500/50 transition-all duration-300"
+											className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900 font-bold py-6 text-lg shadow-lg hover:shadow-amber-500/50 transition-all duration-300 cursor-pointer"
 										>
 											Iniciar sesión
 										</Button>
@@ -366,13 +385,43 @@ export default function LoginPage() {
 
 										<Button
 											type="submit"
-											className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900 font-bold py-6 text-lg shadow-lg hover:shadow-amber-500/50 transition-all duration-300"
+											className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-900 font-bold py-6 text-lg shadow-lg hover:shadow-amber-500/50 transition-all duration-300 cursor-pointer"
 										>
 											Registrarse
 										</Button>
 									</form>
 								</TabsContent>
 							</Tabs>
+						</div>
+
+						{/* SECCIÓN DE INVITADO (NUEVA) */}
+						<div className="px-6 pb-8 pt-4">
+							<div className="relative my-4">
+								<div className="absolute inset-0 flex items-center">
+									<span className="w-full border-t border-gray-700" />
+								</div>
+								<div className="relative flex justify-center text-xs uppercase">
+									<span className="bg-gray-800 px-2 text-gray-400">
+										O prueba sin registro
+									</span>
+								</div>
+							</div>
+
+							<Button
+								onClick={handleGuestLogin}
+								disabled={loadingGuest}
+								variant="outline"
+								className="w-full border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/50 transition-all duration-100 h-12 gap-2 cursor-pointer"
+							>
+								{loadingGuest ? (
+									"Preparando mesa..."
+								) : (
+									<>
+										<Gamepad2 className="w-5 h-5" />
+										Entrar como Invitado
+									</>
+								)}
+							</Button>
 						</div>
 					</div>
 				</motion.div>

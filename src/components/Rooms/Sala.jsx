@@ -1,535 +1,579 @@
-import { useEffect, useState } from "react"
-import {auth, RTDB} from "../../firebaseConfig"
-import {onAuthStateChanged } from "firebase/auth"
-import { useNavigate, useSearchParams } from "react-router-dom"
-import { getUsername } from "../../validation/validations"
-import './Sala.css'
-import RoomControls from "./RoomControls/RoomControls"
-import Swal from "sweetalert2"
-import {leaveSala, eliminarSala } from "../../logic/logic.js"
-import { off, onValue, ref } from "firebase/database"
-import PlayerCard from "./PlayerCard.jsx"
-import { startGame, userAction } from "../../logic/engine.js"
-import { cardsPosition } from "../../utils/cardImagePosition.js"
+import { useEffect, useState } from "react";
+import { auth, RTDB } from "../../firebaseConfig";
+// eslint-disable-next-line no-unused-vars
+import { motion } from "framer-motion";
+import { Spade, Heart } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getUsername } from "../../validation/validations";
+import "./Sala.css";
+import RoomControls from "./RoomControls/RoomControls";
+import Swal from "sweetalert2";
+import { leaveSala, eliminarSala } from "../../logic/logic.js";
+import { off, onValue, ref } from "firebase/database";
+import PlayerCard from "./PlayerCard.jsx";
+import { startGame, userAction } from "../../logic/engine.js";
+import { cardsPosition } from "../../utils/cardImagePosition.js";
+import LoadingScreen from "../LoadingScreen";
 
-export default function Sala(){
-  const navigate = useNavigate()
- 
-  const [user, setUser] = useState({})
-  const [loadingData, setLoadingData] = useState(true)
-  const [searchParams] = useSearchParams();
-  const [players, setPlayers] = useState([])
-  const [infoSala, setInfoSala] = useState({})
-  const [gameData, setGameData] = useState({})
-  const [playerCards, setPlayerCards] = useState(null);
-  const [activeListeners, setActiveListeners] = useState([])
+export default function Sala() {
+	const navigate = useNavigate();
 
-  const isAdmin = user?.username === infoSala?.admin;
-  
-  // suscribir a RTDB:Cards
-  useEffect(() => {
-    if (!infoSala.nombreSala || infoSala.roomState == 'waiting' || !user || loadingData) return;
+	const [user, setUser] = useState({});
+	const [loadingData, setLoadingData] = useState(true);
+	const [searchParams] = useSearchParams();
+	const [players, setPlayers] = useState([]);
+	const [infoSala, setInfoSala] = useState({});
+	const [gameData, setGameData] = useState({});
+	const [playerCards, setPlayerCards] = useState(null);
+	const [activeListeners, setActiveListeners] = useState([]);
 
-    try{
-      const gameDataRef = ref(RTDB, `salas/${infoSala.nombreSala}/usersCards/${user.uid}`);
-      
-      // Suscribirse a CARTAS
-      const unsubscribe = onValue(gameDataRef, (snapshot) => {
-        const data = snapshot.val();
-        setPlayerCards(data);
-      });
+	const isAdmin = user?.username === infoSala?.admin;
 
-      setActiveListeners(prev => [...prev, { ref: gameDataRef, callback: unsubscribe }]);
-      
-      // Cleanup: desuscribirse
-      return () => {
-        off(gameDataRef, "value", unsubscribe);
-      };
-    }catch(err){
-      Swal.fire({
-        title: "Error obteniendo cartas",
-        text: err,
-        background: "#222",
-        color: "#fff"
-      })
-    }
+	// suscribir a RTDB:Cards
+	useEffect(() => {
+		if (
+			!infoSala.nombreSala ||
+			infoSala.roomState == "waiting" ||
+			!user ||
+			loadingData
+		)
+			return;
 
+		try {
+			const gameDataRef = ref(
+				RTDB,
+				`salas/${infoSala.nombreSala}/usersCards/${user.uid}`,
+			);
 
-  }, [infoSala, user, loadingData]);
+			// Suscribirse a CARTAS
+			const unsubscribe = onValue(gameDataRef, (snapshot) => {
+				const data = snapshot.val();
+				setPlayerCards(data);
+			});
 
-  // obtener user
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        navigate('/')
-      } else {
-        getUsername(user)
-          .then((response) => {
-            if (response.uid) {
-              setUser({ ...response })
-            } else {
-              setUser(null)
-            }
-          })
-      }
-    })
+			setActiveListeners((prev) => [
+				...prev,
+				{ ref: gameDataRef, callback: unsubscribe },
+			]);
 
-    return () => unsubscribe()
-  }, [navigate])
+			// Cleanup: desuscribirse
+			return () => {
+				off(gameDataRef, "value", unsubscribe);
+			};
+		} catch (err) {
+			Swal.fire({
+				title: "Error obteniendo cartas",
+				text: err,
+				background: "#222",
+				color: "#fff",
+			});
+		}
+	}, [infoSala, user, loadingData]);
 
-  // suscribir a RTDB:Sala
-  useEffect(() => {
-    const salaID = searchParams.get('id')
-    if (!salaID) {
-      navigate('/')
-      return
-    }
+	// obtener user
+	useEffect(() => {
+		const unsubscribe = onAuthStateChanged(auth, (user) => {
+			if (!user) {
+				navigate("/");
+			} else {
+				getUsername(user).then((response) => {
+					if (response.uid) {
+						setUser({ ...response });
+					} else {
+						setUser(null);
+					}
+				});
+			}
+		});
 
-    // Referencia a publicData
-    const publicDataRef = ref(RTDB, `salas/${salaID}/publicData`)
+		return () => unsubscribe();
+	}, [navigate]);
 
-    const unsubscribe = onValue(publicDataRef, (snapshot) => {
-      const data = snapshot.val()
-      if (data) {
-        setInfoSala(data)
-        setPlayers(data.users || [])
-      } else {
-        // Si la sala no existe
-        Swal.fire({
-          icon: "error",
-          title: "Sala no encontrada",
-          text: "La sala que intentas acceder no existe o fue eliminada.",
-          showConfirmButton: true,
-          confirmButtonText: "Volver al lobby",
-          background: "#222",
-          color: "#fff"
-        }).then(() => navigate('/home'))
-      }
-    }, (error) => {
-      console.error(error)
-      Swal.fire({
-        icon: "error",
-        title: "Error de conexión",
-        text: "No se pudo conectar con la sala.",
-        background: "#222",
-        color: "#fff"
-      })
-      setLoadingData(false)
-    })
+	// suscribir a RTDB:Sala
+	useEffect(() => {
+		const salaID = searchParams.get("id");
+		if (!salaID) {
+			navigate("/");
+			return;
+		}
 
-    setActiveListeners(prev => [...prev, { ref: publicDataRef, callback: unsubscribe }]);
+		// Referencia a publicData
+		const publicDataRef = ref(RTDB, `salas/${salaID}/publicData`);
 
-    // Cleanup
-    return () => {
-      off(publicDataRef, 'value', unsubscribe)
-    }
-  }, [searchParams, navigate])
+		const unsubscribe = onValue(
+			publicDataRef,
+			(snapshot) => {
+				const data = snapshot.val();
+				if (data) {
+					setInfoSala(data);
+					setPlayers(data.users || []);
+				} else {
+					// Si la sala no existe
+					Swal.fire({
+						icon: "error",
+						title: "Sala no encontrada",
+						text: "La sala que intentas acceder no existe o fue eliminada.",
+						showConfirmButton: true,
+						confirmButtonText: "Volver al lobby",
+						background: "#222",
+						color: "#fff",
+					}).then(() => navigate("/home"));
+				}
+			},
+			(error) => {
+				console.error(error);
+				Swal.fire({
+					icon: "error",
+					title: "Error de conexión",
+					text: "No se pudo conectar con la sala.",
+					background: "#222",
+					color: "#fff",
+				});
+				setLoadingData(false);
+			},
+		);
 
-  // suscribir a RTDB:GameData
-   useEffect(() => {
-    const salaID = searchParams.get('id')
-    if (!salaID) {
-      navigate('/')
-      return
-    }
-    // Referencia a gameData
-    const gameDataRef = ref(RTDB, `salas/${salaID}/gameData`)
+		setActiveListeners((prev) => [
+			...prev,
+			{ ref: publicDataRef, callback: unsubscribe },
+		]);
 
-    const unsubscribe = onValue(gameDataRef, (snapshot) => {
-      let dataGame = snapshot.val()
-      if (dataGame) {
-        setGameData({...dataGame})
-      }
-    }, (error) => {
-      console.error(error)
-      Swal.fire({
-        icon: "error",
-        title: "Error de conexión",
-        text: "No se pudo conectar con la sala.",
-        background: "#222",
-        color: "#fff"
-      })
-    })
+		// Cleanup
+		return () => {
+			off(publicDataRef, "value", unsubscribe);
+		};
+	}, [searchParams, navigate]);
 
-    setActiveListeners(prev => [...prev, { ref: gameDataRef, callback: unsubscribe }]);
+	// suscribir a RTDB:GameData
+	useEffect(() => {
+		const salaID = searchParams.get("id");
+		if (!salaID) {
+			navigate("/");
+			return;
+		}
+		// Referencia a gameData
+		const gameDataRef = ref(RTDB, `salas/${salaID}/gameData`);
 
-    // Cleanup
-    return () => {
-      off(gameDataRef, 'value', unsubscribe)
-    }
-  }, [searchParams, navigate])
+		const unsubscribe = onValue(
+			gameDataRef,
+			(snapshot) => {
+				let dataGame = snapshot.val();
+				if (dataGame) {
+					setGameData({ ...dataGame });
+				}
+			},
+			(error) => {
+				console.error(error);
+				Swal.fire({
+					icon: "error",
+					title: "Error de conexión",
+					text: "No se pudo conectar con la sala.",
+					background: "#222",
+					color: "#fff",
+				});
+			},
+		);
 
-  // Ordenar jugadores para que nosotros estemos abajo al medio siempre
-  useEffect(() => {
-    if (!players || players.length === 0 || !user) {
-      return
-    };
-    
-    const index = players.findIndex(p => p.userUID === user.uid);
-    if(index == -1) return
+		setActiveListeners((prev) => [
+			...prev,
+			{ ref: gameDataRef, callback: unsubscribe },
+		]);
 
-    if(index !== 0){
-      const jugadoresOrdenados = [
-        ...players.slice(index),
-        ...players.slice(0, index)
-      ]
+		// Cleanup
+		return () => {
+			off(gameDataRef, "value", unsubscribe);
+		};
+	}, [searchParams, navigate]);
 
-      setPlayers(jugadoresOrdenados)
-    }
-    setLoadingData(false)
+	// Ordenar jugadores para que nosotros estemos abajo al medio siempre
+	useEffect(() => {
+		if (!players || players.length === 0 || !user) {
+			return;
+		}
 
-  }, [players, user]);
+		const index = players.findIndex((p) => p.userUID === user.uid);
+		if (index == -1) return;
 
-  // Pantalla de carga
-  if (loadingData) {
-    return <div className='loading-spinner--container'>
-      <div className="loading-spinner"></div>
-      <p>Cargando datos...</p>
-    </div>;
-  }
+		if (index !== 0) {
+			const jugadoresOrdenados = [
+				...players.slice(index),
+				...players.slice(0, index),
+			];
 
-  // Limpiar toda la suscripcion a RTDB
-  const cleanupListeners = () => {
-    activeListeners.forEach(({ ref, callback }) => {
-      off(ref, 'value', callback);
-    });
-    setActiveListeners([]); // Limpiar la lista
-  };
+			setPlayers(jugadoresOrdenados);
+		}
+		setLoadingData(false);
+	}, [players, user]);
 
-  const handleBackToLobby = async (e) => {
-    if(infoSala.roomState == 'waiting'){
-      if(isAdmin){
-        Swal.fire({
-          title: "Estas seguro que desea salir?",
-          text: "La sala actual sera eliminada",
-          showConfirmButton: true,
-          showDenyButton: true,
-          showCancelButton: true,
-          cancelButtonText: "Cancelar",
-          confirmButtonText: "Salir y eliminar sala",
-          denyButtonText: `Salir y mantener sala`,
-          background: "#222",
-          color: "#fff"
-        }).then((result) => {
-          if (result.isConfirmed) { 
-            Swal.fire({
-              title: 'Eliminando sala...',
-              text: 'Por favor espera',
-              allowOutsideClick: false, 
-              background: "#222",
-              color: "#eee",
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });     
-            eliminarSala({roomName: infoSala.nombreSala})
-              .then(() => {
-                Swal.close({})
-                Swal.fire({
-                  title: "Sala eliminada",
-                  showConfirmButton: true,
-                  showCancelButton: false,
-                  confirmButtonText: "Volver al lobby",
-                  background: "#222",
-                  color: "#fff"
-                }).then(result => {
-                  if(result.isConfirmed){
-                    cleanupListeners()
-                    navigate('/home')
-                  }
-                })
-              })
-              .catch(err=>{
-                Swal.fire({
-                  title: "Error eliminando sala",
-                  text: err.message,
-                  background: "#222",
-                  color: "#fff"
-                })
-              })
-          }
-          if(result.isDenied){
-            navigate('/home')
-          }
-          
-        });
-      }else{
-        Swal.fire({
-          title: "Estas seguro que desea salir?",
-          showDenyButton: true,
-          confirmButtonText: "Salir",
-          denyButtonText: `No Salir`,
-          background: "#222",
-          color: "#fff"
-        }).then((result) =>{
-          if(result.isConfirmed){
-            Swal.fire({
-              title: `Saliendo de sala` ,
-              text: 'Juntando fichas...',
-              allowOutsideClick: false, 
-              background: "#222",
-              color: "#eee",
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });    
-            let roomID = infoSala.nombreSala
-            leaveSala({roomID})
-              .then(data => {
-                if(data.status == 200){
-                  Swal.close({})
-                  cleanupListeners()
-                  navigate('/home')
-                }else{
-                  Swal.close({})
-                  Swal.fire({
-                    icon:"error",
-                    title: "Error saliendo de la sala",
-                    text: data.message,
-                    background: "#222",
-                    color: "#fff"
-                  })
-                }
-              })
-          }
-        })
-      }
-      e.preventDefault()
-      return
-    }
-    if(infoSala.roomState !== 'waiting' & infoSala.roomState !== 'starting'){    
-      if(isAdmin){
-       Swal.fire({
-          title: "Estas seguro que desea salir?",
-          text: "La sala actual sera eliminada",
-          showConfirmButton: true,
-          showDenyButton: true,
-          showCancelButton: true,
-          cancelButtonText: "Cancelar",
-          confirmButtonText: "Salir y eliminar sala",
-          denyButtonText: `Salir y mantener sala`,
-          background: "#222",
-          color: "#fff"
-        }).then((result) => {
-          if (result.isConfirmed) { 
-            Swal.fire({
-              title: 'Eliminando sala...',
-              text: 'Por favor espera',
-              allowOutsideClick: false, 
-              background: "#222",
-              color: "#eee",
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });     
-            eliminarSala({roomName: infoSala.nombreSala})
-              .then(() => {
-                Swal.close({})
-                Swal.fire({
-                  title: "Sala eliminada",
-                  showConfirmButton: true,
-                  showCancelButton: false,
-                  confirmButtonText: "Volver al lobby",
-                  background: "#222",
-                  color: "#fff"
-                }).then(result => {
-                  if(result.isConfirmed){
-                    cleanupListeners()
-                    navigate('/home')
-                  }
-                })
-              })
-              .catch(err=>{
-                Swal.fire({
-                  title: "Error eliminando sala",
-                  text: err.message,
-                  background: "#222",
-                  color: "#fff"
-                })
-              })
-          }
-          if(result.isDenied){
-            cleanupListeners()
-            navigate('/home')
-          }
-          
-        });
-      }else{
-        Swal.fire({
-          title: "Estas seguro que desea salir?",
-          text: "Se foldeara la mano actual",
-          showDenyButton: true,
-          confirmButtonText: "Salir",
-          denyButtonText: `No Salir`,
-          background: "#222",
-          color: "#fff"
-        })
-        .then(res => {
-          if(res.isConfirmed){
-            Swal.fire({
-              title: `Saliendo de sala` ,
-              text: 'Foldeando mano y juntando fichas...',
-              allowOutsideClick: false, 
-              background: "#222",
-              color: "#eee",
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });
-            try{
-              userAction({
-                roomID: infoSala.nombreSala,
-                action: "Fold"
-              }).then((res) => {
-                if(res.status == 200){
-                  leaveSala({roomID: infoSala.nombreSala})
-                    .then(res => {
-                      if(res.status == 200){
-                        Swal.close()
-                        navigate('/home')
-                      }else{
-                        throw new Error("Leaving room error")
-                      }
-                    })
-                }else{
-                  throw new Error("User Action Error")
-                }
-              })
-            }catch(err){
-              Swal.fire({
-                icon: "error",
-                title: "Error dejando la sala",
-                text: err.message
-              })
-            }
-          }
-        })
-      
-        
-      }
-      // 
-    }
+	// Pantalla de carga
+	if (loadingData) {
+		return <LoadingScreen message="Conectando a la sala..." />;
+	}
 
-  }
+	// Limpiar toda la suscripcion a RTDB
+	const cleanupListeners = () => {
+		activeListeners.forEach(({ ref, callback }) => {
+			off(ref, "value", callback);
+		});
+		setActiveListeners([]); // Limpiar la lista
+	};
 
-  const handleStartGame = async (e) => {
-    e.preventDefault()
-    // FUNCION PARA INICIAR SALA...
-    startGame({
-      roomID: infoSala.nombreSala
-    })
-    .then(data => {
-      if(data.status != 200){
-        Swal.fire({
-          title: "Error iniciando juego. Intente nuevamente.",
-          text: data.message,
-          icon: "error",
-          background: "#222",
-          color: "#fff"
-        })
-      }
-    }
-    )
-  }
+	const handleBackToLobby = async (e) => {
+		if (infoSala.roomState == "waiting") {
+			if (isAdmin) {
+				Swal.fire({
+					title: "Estas seguro que desea salir?",
+					text: "La sala actual sera eliminada",
+					showConfirmButton: true,
+					showDenyButton: true,
+					showCancelButton: true,
+					cancelButtonText: "Cancelar",
+					confirmButtonText: "Salir y eliminar sala",
+					denyButtonText: `Salir y mantener sala`,
+					background: "#222",
+					color: "#fff",
+				}).then((result) => {
+					if (result.isConfirmed) {
+						Swal.fire({
+							title: "Eliminando sala...",
+							text: "Por favor espera",
+							allowOutsideClick: false,
+							background: "#222",
+							color: "#eee",
+							didOpen: () => {
+								Swal.showLoading();
+							},
+						});
+						eliminarSala({ roomName: infoSala.nombreSala })
+							.then(() => {
+								Swal.close({});
+								Swal.fire({
+									title: "Sala eliminada",
+									showConfirmButton: true,
+									showCancelButton: false,
+									confirmButtonText: "Volver al lobby",
+									background: "#222",
+									color: "#fff",
+								}).then((result) => {
+									if (result.isConfirmed) {
+										cleanupListeners();
+										navigate("/home");
+									}
+								});
+							})
+							.catch((err) => {
+								Swal.fire({
+									title: "Error eliminando sala",
+									text: err.message,
+									background: "#222",
+									color: "#fff",
+								});
+							});
+					}
+					if (result.isDenied) {
+						navigate("/home");
+					}
+				});
+			} else {
+				Swal.fire({
+					title: "Estas seguro que desea salir?",
+					showDenyButton: true,
+					confirmButtonText: "Salir",
+					denyButtonText: `No Salir`,
+					background: "#222",
+					color: "#fff",
+				}).then((result) => {
+					if (result.isConfirmed) {
+						Swal.fire({
+							title: `Saliendo de sala`,
+							text: "Juntando fichas...",
+							allowOutsideClick: false,
+							background: "#222",
+							color: "#eee",
+							didOpen: () => {
+								Swal.showLoading();
+							},
+						});
+						let roomID = infoSala.nombreSala;
+						leaveSala({ roomID }).then((data) => {
+							if (data.status == 200) {
+								Swal.close({});
+								cleanupListeners();
+								navigate("/home");
+							} else {
+								Swal.close({});
+								Swal.fire({
+									icon: "error",
+									title: "Error saliendo de la sala",
+									text: data.message,
+									background: "#222",
+									color: "#fff",
+								});
+							}
+						});
+					}
+				});
+			}
+			e.preventDefault();
+			return;
+		}
+		if (
+			(infoSala.roomState !== "waiting") &
+			(infoSala.roomState !== "starting")
+		) {
+			if (isAdmin) {
+				Swal.fire({
+					title: "Estas seguro que desea salir?",
+					text: "La sala actual sera eliminada",
+					showConfirmButton: true,
+					showDenyButton: true,
+					showCancelButton: true,
+					cancelButtonText: "Cancelar",
+					confirmButtonText: "Salir y eliminar sala",
+					denyButtonText: `Salir y mantener sala`,
+					background: "#222",
+					color: "#fff",
+				}).then((result) => {
+					if (result.isConfirmed) {
+						Swal.fire({
+							title: "Eliminando sala...",
+							text: "Por favor espera",
+							allowOutsideClick: false,
+							background: "#222",
+							color: "#eee",
+							didOpen: () => {
+								Swal.showLoading();
+							},
+						});
+						eliminarSala({ roomName: infoSala.nombreSala })
+							.then(() => {
+								Swal.close({});
+								Swal.fire({
+									title: "Sala eliminada",
+									showConfirmButton: true,
+									showCancelButton: false,
+									confirmButtonText: "Volver al lobby",
+									background: "#222",
+									color: "#fff",
+								}).then((result) => {
+									if (result.isConfirmed) {
+										cleanupListeners();
+										navigate("/home");
+									}
+								});
+							})
+							.catch((err) => {
+								Swal.fire({
+									title: "Error eliminando sala",
+									text: err.message,
+									background: "#222",
+									color: "#fff",
+								});
+							});
+					}
+					if (result.isDenied) {
+						cleanupListeners();
+						navigate("/home");
+					}
+				});
+			} else {
+				Swal.fire({
+					title: "Estas seguro que desea salir?",
+					text: "Se foldeara la mano actual",
+					showDenyButton: true,
+					confirmButtonText: "Salir",
+					denyButtonText: `No Salir`,
+					background: "#222",
+					color: "#fff",
+				}).then((res) => {
+					if (res.isConfirmed) {
+						Swal.fire({
+							title: `Saliendo de sala`,
+							text: "Foldeando mano y juntando fichas...",
+							allowOutsideClick: false,
+							background: "#222",
+							color: "#eee",
+							didOpen: () => {
+								Swal.showLoading();
+							},
+						});
+						try {
+							userAction({
+								roomID: infoSala.nombreSala,
+								action: "Fold",
+							}).then((res) => {
+								if (res.status == 200) {
+									leaveSala({ roomID: infoSala.nombreSala }).then((res) => {
+										if (res.status == 200) {
+											Swal.close();
+											navigate("/home");
+										} else {
+											throw new Error("Leaving room error");
+										}
+									});
+								} else {
+									throw new Error("User Action Error");
+								}
+							});
+						} catch (err) {
+							Swal.fire({
+								icon: "error",
+								title: "Error dejando la sala",
+								text: err.message,
+							});
+						}
+					}
+				});
+			}
+			//
+		}
+	};
 
-  return(
-    <div className="room--container">
-      {
-        infoSala.roomState !== 'starting' &&
-        <button title="Volver al lobby" className="back-to-lobby--btn" onClick={handleBackToLobby}> 
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
-            <path d="M575.8 255.5c0 18-15 32.1-32 32.1l-32 0 .7 160.2c0 2.7-.2 5.4-.5 8.1l0 16.2c0 22.1-17.9 40-40 40l-16 0c-1.1 0-2.2 0-3.3-.1c-1.4 .1-2.8 .1-4.2 .1L416 512l-24 0c-22.1 0-40-17.9-40-40l0-24 0-64c0-17.7-14.3-32-32-32l-64 0c-17.7 0-32 14.3-32 32l0 64 0 24c0 22.1-17.9 40-40 40l-24 0-31.9 0c-1.5 0-3-.1-4.5-.2c-1.2 .1-2.4 .2-3.6 .2l-16 0c-22.1 0-40-17.9-40-40l0-112c0-.9 0-1.9 .1-2.8l0-69.7-32 0c-18 0-32-14-32-32.1c0-9 3-17 10-24L266.4 8c7-7 15-8 22-8s15 2 21 7L564.8 231.5c8 7 12 15 11 24z"/>
-          </svg>
-        </button>
-      }
-      <div className="main-table--container">
-        {
-          players.map((player, playerIndex) => (
-            <PlayerCard
-              key={playerIndex}
-              players={players}
-              player={player}
-              playerIndex={playerIndex}
-              playerCards={playerIndex === 0 ? playerCards : false}
-              infoSala={infoSala}
-              gameData={gameData || false}
-            />
-        ))}
-      </div>
-      {/* ----RoomState: waiting---- */}
-      {
-        (infoSala.roomState == 'waiting' || infoSala.roomState == 'starting') &&
-        <div className="room-waiting-players--container">
-          <div className="room-waiting-players--box">
-            {
-              infoSala.roomState == 'starting' ?
-                <p>Repartiendo cartas...</p>
-              :
-                <>
-                  <div>
-                    {
-                      gameData?.lastWinner ?
-                        gameData?.lastAction?.action != 'Fold' ?
-                          <p>Gano {gameData.lastWinner.username} con {gameData.lastWinner.handName}</p>
-                        :
-                          <p>
-                            <i>{gameData.lastWinner.username}</i> ganó el pozo de <i>{gameData.lastWinner.amountWinned}</i> fichas</p>
-                        :
-                        ''
-                    }
-                    {
-                      infoSala?.users?.length == infoSala?.maxPlayers ?
-                      <>
-                        Esperando admin para iniciar partida
-                      </>
-                      :
-                      <>
-                        Esperando jugadores... {infoSala.users.length}/{infoSala.maxPlayers} 
-                      </>
-                    }
-                  </div> 
-                    {
-                      (infoSala.users.length > 1 & isAdmin) ?
-                      <button onClick={handleStartGame}>Comenzar ronda</button>
-                      :
-                      ''
-                    }
-                </>
-            }
-          </div>
-        </div>
-      }
-      {/* ----RoomState: preflop---- */}
-      {
-        gameData.pot > 0 &&
-        <div className="cards-nd-pot--info-container">
-          <p>Pozo: {gameData.pot}</p>
-          <div className="public-cards--container">
-            {
-              gameData?.communityCards?.map((card) => (
-                <div
-                  key={card}
-                  className="community-card"
-                  style={{
-                    ...cardsPosition[card] 
-                  }}
-                >
-                </div>
-              ))
-            }
-          </div>
-        </div>
-      }
-      {
-        infoSala.roomState !== 'waiting'  &&
+	const handleStartGame = async (e) => {
+		e.preventDefault();
+		// FUNCION PARA INICIAR SALA...
+		startGame({
+			roomID: infoSala.nombreSala,
+		}).then((data) => {
+			if (data.status != 200) {
+				Swal.fire({
+					title: "Error iniciando juego. Intente nuevamente.",
+					text: data.message,
+					icon: "error",
+					background: "#222",
+					color: "#fff",
+				});
+			}
+		});
+	};
 
-          <RoomControls 
-            infoSala={infoSala}
-            players={players}
-            user={user}
-            gameData={gameData}
-          />
-      }
-    </div>
-  )
+	return (
+		<div className="room--container">
+			<div
+				className="absolute inset-0 z-0"
+				style={{
+					backgroundImage:
+						"url(https://images.unsplash.com/photo-1643200350893-0f386c79e0be)",
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+					filter: "brightness(0.3)",
+				}}
+			/>
+
+			{/* Gradient Overlay */}
+			<div className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-black/80 to-gray-900/90 z-0" />
+
+			{/* Floating Decorative Elements */}
+			<motion.div
+				animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
+				transition={{ duration: 6, repeat: Infinity }}
+				className="absolute top-20 left-10 text-amber-500/20"
+			>
+				<Spade className="w-24 h-24" />
+			</motion.div>
+			<motion.div
+				animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
+				transition={{ duration: 8, repeat: Infinity }}
+				className="absolute bottom-20 right-10 text-red-500/20"
+			>
+				<Heart className="w-24 h-24" />
+			</motion.div>
+
+			{infoSala.roomState !== "starting" && (
+				<button
+					title="Volver al lobby"
+					className="back-to-lobby--btn"
+					onClick={handleBackToLobby}
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+						<path d="M575.8 255.5c0 18-15 32.1-32 32.1l-32 0 .7 160.2c0 2.7-.2 5.4-.5 8.1l0 16.2c0 22.1-17.9 40-40 40l-16 0c-1.1 0-2.2 0-3.3-.1c-1.4 .1-2.8 .1-4.2 .1L416 512l-24 0c-22.1 0-40-17.9-40-40l0-24 0-64c0-17.7-14.3-32-32-32l-64 0c-17.7 0-32 14.3-32 32l0 64 0 24c0 22.1-17.9 40-40 40l-24 0-31.9 0c-1.5 0-3-.1-4.5-.2c-1.2 .1-2.4 .2-3.6 .2l-16 0c-22.1 0-40-17.9-40-40l0-112c0-.9 0-1.9 .1-2.8l0-69.7-32 0c-18 0-32-14-32-32.1c0-9 3-17 10-24L266.4 8c7-7 15-8 22-8s15 2 21 7L564.8 231.5c8 7 12 15 11 24z" />
+					</svg>
+				</button>
+			)}
+			<div className="main-table--container">
+				{players.map((player, playerIndex) => (
+					<PlayerCard
+						key={playerIndex}
+						players={players}
+						player={player}
+						playerIndex={playerIndex}
+						playerCards={playerIndex === 0 ? playerCards : false}
+						infoSala={infoSala}
+						gameData={gameData || false}
+					/>
+				))}
+			</div>
+			{/* ----RoomState: waiting---- */}
+			{(infoSala.roomState == "waiting" ||
+				infoSala.roomState == "starting") && (
+				<div className="room-waiting-players--container">
+					<div className="room-waiting-players--box">
+						{infoSala.roomState == "starting" ? (
+							<p>Repartiendo cartas...</p>
+						) : (
+							<>
+								<div>
+									{gameData?.lastWinner ? (
+										gameData?.lastAction?.action != "Fold" ? (
+											<p>
+												Gano {gameData.lastWinner.username} con{" "}
+												{gameData.lastWinner.handName}
+											</p>
+										) : (
+											<p>
+												<i>{gameData.lastWinner.username}</i> ganó el pozo de{" "}
+												<i>{gameData.lastWinner.amountWinned}</i> fichas
+											</p>
+										)
+									) : (
+										""
+									)}
+									{infoSala?.users?.length == infoSala?.maxPlayers ? (
+										<>Esperando admin para iniciar partida</>
+									) : (
+										<>
+											Esperando jugadores... {infoSala.users.length}/
+											{infoSala.maxPlayers}
+										</>
+									)}
+								</div>
+								{(infoSala.users.length > 1) & isAdmin ? (
+									<button onClick={handleStartGame}>Comenzar ronda</button>
+								) : (
+									""
+								)}
+							</>
+						)}
+					</div>
+				</div>
+			)}
+			{/* ----RoomState: preflop---- */}
+			{gameData.pot > 0 && (
+				<div className="cards-nd-pot--info-container">
+					<p>Pozo: {gameData.pot}</p>
+					<div className="public-cards--container">
+						{gameData?.communityCards?.map((card) => (
+							<div
+								key={card}
+								style={{
+									...cardsPosition[card],
+								}}
+							></div>
+						))}
+					</div>
+				</div>
+			)}
+			{infoSala.roomState !== "waiting" && (
+				<div className="relative z-50">
+					<RoomControls
+						infoSala={infoSala}
+						players={players}
+						user={user}
+						gameData={gameData || {}}
+					/>
+				</div>
+			)}
+		</div>
+	);
 }

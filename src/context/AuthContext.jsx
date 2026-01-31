@@ -7,12 +7,12 @@ import {
 	browserLocalPersistence,
 	browserSessionPersistence,
 	setPersistence,
+	signInAnonymously,
 } from "firebase/auth";
 import { auth, db } from "../firebaseConfig.js";
 import {
 	collection,
 	doc,
-	getDoc,
 	getDocs,
 	query,
 	setDoc,
@@ -20,7 +20,11 @@ import {
 	where,
 	increment,
 	serverTimestamp,
+	onSnapshot,
 } from "firebase/firestore";
+import Swal from "sweetalert2";
+// Asegúrate de que deleteGuest reciba lo que espera (userUID y token)
+import { deleteGuest } from "../logic/logic.js";
 
 const AuthContext = createContext();
 
@@ -29,43 +33,48 @@ export function useAuth() {
 	return useContext(AuthContext);
 }
 
-// 3. El componente proveedor
 export function AuthProvider({ children }) {
 	const [currentUser, setCurrentUser] = useState(null);
 	const [userDataDB, setUserDataDB] = useState(null);
 
-	// Persistencia de la sesión (El "escucha" de Firebase)
+	// 1. Escuchar estado de autenticación (Firebase Auth)
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			setCurrentUser(user);
 		});
-
 		return unsubscribe;
 	}, []);
 
-	// Para obtener la data del usuario en la DB
+	// 2. Escuchar datos del usuario en Firestore (Tiempo Real)
 	useEffect(() => {
-		const fetchUserData = async () => {
-			if (!currentUser) {
-				setUserDataDB(null);
-				return;
-			}
+		let unsubscribeFirestore = null;
 
-			try {
-				const userRef = doc(db, "Users", currentUser.uid);
-				const userSnap = await getDoc(userRef);
+		if (currentUser) {
+			const userRef = doc(db, "Users", currentUser.uid);
 
-				if (userSnap.exists()) {
-					setUserDataDB(userSnap.data());
-				} else {
-					setUserDataDB(null);
-				}
-			} catch (error) {
-				console.error("Error al obtener usuario:", error);
+			unsubscribeFirestore = onSnapshot(
+				userRef,
+				(docSnap) => {
+					if (docSnap.exists()) {
+						setUserDataDB(docSnap.data());
+					} else {
+						setUserDataDB(null);
+					}
+				},
+				(error) => {
+					console.error("Error escuchando datos del usuario:", error);
+				},
+			);
+		} else {
+			setUserDataDB(null);
+		}
+
+		// Limpieza al desmontar o al cambiar de usuario (logout)
+		return () => {
+			if (unsubscribeFirestore) {
+				unsubscribeFirestore();
 			}
 		};
-
-		fetchUserData();
 	}, [currentUser]);
 
 	// ------------ REGISTRO ------------
@@ -73,19 +82,20 @@ export function AuthProvider({ children }) {
 		if (!username) throw new Error("Username invalido o vacio");
 
 		try {
-			// creamos el user en auth
 			const { user } = await createUserWithEmailAndPassword(
 				auth,
 				email,
 				password,
 			);
-			// creamos el user en db
+
 			await setDoc(doc(db, "Users", user.uid), {
 				uid: user.uid,
 				email,
 				username,
 				fichas: 15000,
+				fichasInGame: 0, // Es buena práctica inicializarlo
 				createdAt: new Date(),
+				isGuest: false,
 			});
 		} catch (err) {
 			throw new Error(err);
@@ -95,10 +105,8 @@ export function AuthProvider({ children }) {
 	// Verificamos disponibilidad de username
 	async function verifyUsername(username) {
 		if (!username) return;
-
 		const q = query(collection(db, "Users"), where("username", "==", username));
 		const querySnapshot = await getDocs(q);
-
 		return querySnapshot.empty;
 	}
 
@@ -110,7 +118,6 @@ export function AuthProvider({ children }) {
 				: browserSessionPersistence;
 
 			await setPersistence(auth, persistenceType);
-
 			return signInWithEmailAndPassword(auth, email, password);
 		} catch (err) {
 			throw new Error(err);
@@ -118,10 +125,65 @@ export function AuthProvider({ children }) {
 	}
 
 	// ------------ LOGOUT ------------
-	function logout() {
-		return signOut(auth);
+	async function logout() {
+		if (userDataDB?.isGuest) {
+			const result = await Swal.fire({
+				title: "¿Abandonar sesión de invitado?",
+				text: "¡Cuidado! Al ser una cuenta de invitado, si sales se borrarán tus fichas y progreso permanentemente.",
+				icon: "warning",
+				showCancelButton: true,
+				confirmButtonColor: "#d33",
+				cancelButtonColor: "#3085d6",
+				confirmButtonText: "Sí, borrar y salir",
+				cancelButtonText: "Cancelar",
+				background: "#222",
+				color: "#eee",
+			});
+
+			if (!result.isConfirmed) return;
+
+			Swal.fire({
+				title: "Cerrando Sesión...",
+				text: "Por favor espera",
+				allowOutsideClick: false,
+				background: "#222",
+				color: "#eee",
+				didOpen: () => {
+					Swal.showLoading();
+				},
+			});
+
+			try {
+				// Obtenemos el token fresco antes de mandar
+				const token = await currentUser.getIdToken();
+
+				// Llamamos a la lambda pasando lo que espera (userUID y token)
+				// Asegúrate que tu función en logic.js maneje estos parámetros
+				let lambdaFunction = await deleteGuest({
+					userUID: currentUser.uid,
+					token: token,
+				});
+
+				if (
+					lambdaFunction.statusCode !== 200 &&
+					lambdaFunction.status !== 200
+				) {
+					throw new Error("Error eliminando usuario invitado");
+				}
+			} catch (error) {
+				console.error("Error limpiando usuario invitado:", error);
+			}
+		}
+
+		await signOut(auth);
+		// Nota: setUserDataDB(null) se hace automático gracias al useEffect cuando currentUser cambia a null
+		Swal.close();
+		return true;
 	}
 
+	// ------------ LOBBY LOGIC ------------
+
+	// Actualizar Fichas
 	async function updateChips(chipsDelta, isClaim = false) {
 		if (!currentUser || !userDataDB) return;
 
@@ -130,21 +192,13 @@ export function AuthProvider({ children }) {
 
 			if (isClaim) {
 				const lastClaim = userDataDB.lastClaim;
-
 				if (lastClaim) {
-					// CORRECCIÓN: Verificar el tipo de objeto antes de convertir
 					let lastClaimDate;
-
-					// Si viene de Firebase (tiene el método toDate)
 					if (typeof lastClaim.toDate === "function") {
 						lastClaimDate = lastClaim.toDate();
-					}
-					// Si es una actualización local (ya es un objeto Date)
-					else if (lastClaim instanceof Date) {
+					} else if (lastClaim instanceof Date) {
 						lastClaimDate = lastClaim;
-					}
-					// Por seguridad, si es otro formato (string, número) intentamos instanciarlo
-					else {
+					} else {
 						lastClaimDate = new Date(lastClaim);
 					}
 
@@ -162,7 +216,7 @@ export function AuthProvider({ children }) {
 				}
 			}
 
-			// 🔥 Update en Firestore
+			// Update en Firestore
 			const updateData = {
 				fichas: increment(chipsDelta),
 			};
@@ -173,16 +227,9 @@ export function AuthProvider({ children }) {
 
 			await updateDoc(userRef, updateData);
 
-			// ⚡ Update local
-			setUserDataDB((prev) =>
-				prev
-					? {
-							...prev,
-							fichas: prev.fichas + chipsDelta,
-							...(isClaim && { lastClaim: new Date() }),
-						}
-					: prev,
-			);
+			// NOTA: Ya no hace falta el setUserDataDB manual aquí abajo porque
+			// el onSnapshot del useEffect detectará el updateDoc y actualizará el estado solo.
+			// Pero si quieres mantener la UI "optimista" (instantánea antes de red), puedes dejarlo.
 
 			return { success: true };
 		} catch (error) {
@@ -191,10 +238,57 @@ export function AuthProvider({ children }) {
 		}
 	}
 
-	// Objeto con todo lo que vamos a exportar
+	// getRoomsList
+	async function getRoomsList() {
+		try {
+			const querySnapshot = await getDocs(collection(db, "Salas"));
+			if (querySnapshot.empty) return [];
+
+			const salas = querySnapshot.docs.map((doc) => ({
+				id: doc.id,
+				...doc.data(),
+			}));
+
+			return salas;
+		} catch (error) {
+			return { error: true, message: error };
+		}
+	}
+
+	// ------------ LOGIN ANONIMO ------------
+	const loginAsGuest = async () => {
+		try {
+			await setPersistence(auth, browserLocalPersistence);
+			const userCredential = await signInAnonymously(auth);
+			const user = userCredential.user;
+
+			const guestUsername = `Invitado_${user.uid.slice(0, 5)}`;
+			const userRef = doc(db, "Users", user.uid);
+
+			await setDoc(userRef, {
+				uid: user.uid,
+				username: guestUsername,
+				email: null,
+				fichas: 5000,
+				fichasInGame: 0,
+				profilePicture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${guestUsername}`,
+				createdAt: serverTimestamp(),
+				lastClaim: null,
+				isGuest: true,
+			});
+
+			return { success: true };
+		} catch (error) {
+			console.error("Error en login de invitado:", error);
+			return { success: false, error: error.message };
+		}
+	};
+
 	const value = {
 		verifyUsername,
+		loginAsGuest,
 		updateChips,
+		getRoomsList,
 		userDataDB,
 		currentUser,
 		signup,

@@ -5,118 +5,74 @@ import { X, Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Swal from "sweetalert2";
 
-// Mock Data
-const MOCK_ROOMS = [
-	{
-		id: 1,
-		name: "La Cueva del Lobo",
-		minBuyIn: 100,
-		maxBuyIn: 500,
-		currentPlayers: 4,
-		maxPlayers: 6,
-		status: "Playing",
-		isPrivate: false,
-	},
-	{
-		id: 2,
-		name: "High Rollers VIP",
-		minBuyIn: 1000,
-		maxBuyIn: 5000,
-		currentPlayers: 5,
-		maxPlayers: 9,
-		status: "Waiting",
-		isPrivate: true,
-		password: "vip",
-	},
-	{
-		id: 3,
-		name: "Friday Night Poker",
-		minBuyIn: 200,
-		maxBuyIn: 1000,
-		currentPlayers: 6,
-		maxPlayers: 6,
-		status: "Playing",
-		isPrivate: false,
-	},
-	{
-		id: 4,
-		name: "Beginners Luck",
-		minBuyIn: 50,
-		maxBuyIn: 200,
-		currentPlayers: 2,
-		maxPlayers: 9,
-		status: "Waiting",
-		isPrivate: false,
-	},
-	{
-		id: 5,
-		name: "Shark Tank",
-		minBuyIn: 500,
-		maxBuyIn: 2500,
-		currentPlayers: 8,
-		maxPlayers: 9,
-		status: "Playing",
-		isPrivate: false,
-	},
-	{
-		id: 6,
-		name: "Private Club 42",
-		minBuyIn: 200,
-		maxBuyIn: 800,
-		currentPlayers: 3,
-		maxPlayers: 6,
-		status: "Waiting",
-		isPrivate: true,
-		password: "club",
-	},
-	{
-		id: 7,
-		name: "Royal Flush Den",
-		minBuyIn: 100,
-		maxBuyIn: 400,
-		currentPlayers: 1,
-		maxPlayers: 6,
-		status: "Waiting",
-		isPrivate: false,
-	},
-	{
-		id: 8,
-		name: "Midnight Madness",
-		minBuyIn: 300,
-		maxBuyIn: 1500,
-		currentPlayers: 5,
-		maxPlayers: 6,
-		status: "Playing",
-		isPrivate: false,
-	},
-	{
-		id: 9,
-		name: "Sunday Grind",
-		minBuyIn: 100,
-		maxBuyIn: 1000,
-		currentPlayers: 9,
-		maxPlayers: 9,
-		status: "Playing",
-		isPrivate: false,
-	},
-];
+// IMPORTS
+import JoinRoomButton from "./JoinRoomButton";
+import { joinRoom } from "../logic/logic";
 
-const JoinRoomModal = ({ isOpen, onClose }) => {
+const JoinRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
 	const [searchTerm, setSearchTerm] = useState("");
-	const [filteredRooms, setFilteredRooms] = useState(MOCK_ROOMS);
+	const [filteredRooms, setFilteredRooms] = useState([]);
+	const [roomsList, setRoomsList] = useState([]);
 	const navigate = useNavigate();
 
+	const { getRoomsList, userDataDB } = useAuth();
+
+	// Filtrar salas
 	useEffect(() => {
-		const results = MOCK_ROOMS.filter((room) =>
+		const results = roomsList.filter((room) =>
 			room.name.toLowerCase().includes(searchTerm.toLowerCase()),
 		);
 		setFilteredRooms(results);
-	}, [searchTerm]);
+	}, [roomsList, searchTerm]);
 
-	const handleJoinRoom = (roomId) => {
+	// Obtener salas al abrir el modal
+	useEffect(() => {
+		if (isOpen) {
+			getRoomsList().then((res) => {
+				setRoomsList(res);
+			});
+		}
+	}, [getRoomsList, isOpen]);
+
+	// --- LÓGICA DE UNIÓN NUEVA (Volver a la mesa) ---
+	const handleRejoin = (roomId) => {
 		onClose();
-		navigate(`/room?id=${roomId}`);
+		navigate(`/sala?id=${roomId}`);
+	};
+
+	// --- LÓGICA DE UNIÓN ESTÁNDAR ---
+	const handleJoinWithLogic = async ({ roomID, password, moneyInGame }) => {
+		try {
+			if (!userDataDB) throw new Error("No hay usuario autenticado");
+
+			const response = await joinRoom({
+				user: userDataDB,
+				roomID: roomID,
+				buyIn: moneyInGame,
+				password: password,
+			});
+
+			if (response.statusCode === 200 || response.status === 200) {
+				onClose();
+				navigate(`/sala?id=${roomID}`);
+			} else {
+				throw new Error(response.message || "No se pudo unir a la sala");
+			}
+		} catch (error) {
+			console.error(error);
+			Swal.fire({
+				icon: "error",
+				title: "Error al unirse",
+				text: error.message,
+				background: "#222",
+				color: "#eee",
+				confirmButtonColor: "#d97706",
+			});
+			throw error;
+		}
 	};
 
 	if (!isOpen) return null;
@@ -177,35 +133,61 @@ const JoinRoomModal = ({ isOpen, onClose }) => {
 					{/* Body */}
 					<div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-900/50 custom-scrollbar">
 						<div className="grid grid-cols-1 gap-4">
-							{filteredRooms.map((room) => (
-								<div
-									key={room.id}
-									className="flex flex-col md:flex-row items-center justify-between bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-amber-500/50 transition-colors"
-								>
-									<div className="w-full md:w-auto mb-4 md:mb-0">
-										<div className="font-bold text-white text-lg">
-											{room.name}
-										</div>
-										<div className="text-sm text-gray-400 flex gap-3 mt-1">
-											<span>
-												Buy-In: ${room.minBuyIn} - ${room.maxBuyIn}
-											</span>
-											<span className="text-gray-600">|</span>
-											<span>
-												{room.currentPlayers}/{room.maxPlayers} Jugadores
-											</span>
-										</div>
-									</div>
-									<div className="w-full md:w-auto">
-										<Button
-											onClick={() => handleJoinRoom(room.id)}
-											className="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold"
+							{filteredRooms.length ? (
+								filteredRooms.map((room) => {
+									// --- VERIFICACIÓN DE USUARIO EN SALA ---
+									// Chequeamos si el nombre de usuario está en la lista de usuarios de la sala
+									// Usamos optional chaining (?.) por seguridad
+									const isUserInRoom =
+										userDataDB?.username &&
+										room.usersList?.includes(userDataDB.username);
+
+									return (
+										<div
+											key={room.id}
+											className="flex flex-col md:flex-row items-center justify-between bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-amber-500/50 transition-colors"
 										>
-											Unirse
-										</Button>
-									</div>
+											<div className="w-full md:w-auto mb-4 md:mb-0">
+												<div className="font-bold text-white text-lg">
+													{room.name}
+												</div>
+												<div className="text-sm text-gray-400 flex gap-3 mt-1">
+													<span>
+														Buy-In: ${room.buyInMin} - ${room.buyInMax}
+													</span>
+													<span className="text-gray-600">|</span>
+													<span>
+														{room.playersQuantity}/{room.maxPlayers} Jugadores
+													</span>
+												</div>
+											</div>
+											<div className="w-full md:w-auto flex justify-end">
+												<JoinRoomButton
+													room={room}
+													onJoin={handleJoinWithLogic}
+													onRejoin={handleRejoin} // <--- Nueva función para volver
+													isAlreadyInRoom={isUserInRoom} // <--- Nuevo booleano
+													userBalance={userDataDB?.fichas || 0}
+												/>
+											</div>
+										</div>
+									);
+								})
+							) : (
+								<div className="text-center py-10 space-y-4">
+									<p className="text-gray-400">
+										No hay salas activas con ese nombre
+									</p>
+									<Button
+										className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-8"
+										onClick={() => {
+											onCreateRoom();
+										}}
+									>
+										Crear Sala
+									</Button>
 								</div>
-							))}
+							)}
 						</div>
 					</div>
 				</motion.div>

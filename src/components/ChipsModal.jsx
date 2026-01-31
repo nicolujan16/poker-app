@@ -68,6 +68,17 @@ const ChipsModal = ({ isOpen, onClose }) => {
 		// Doble verificación de seguridad
 		if (timeLeft) return;
 
+		Swal.fire({
+			title: "Cargando Fichas...",
+			text: "Por favor espera",
+			allowOutsideClick: false,
+			background: "#222",
+			color: "#eee",
+			didOpen: () => {
+				Swal.showLoading();
+			},
+		});
+
 		const result = await updateChips(500, true);
 		if (result.success) {
 			Swal.fire({

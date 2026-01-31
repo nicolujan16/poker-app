@@ -22,8 +22,8 @@ const CreateRoomModal = ({ isOpen, onClose, currentUser }) => {
 	const [roomName, setRoomName] = useState("");
 	const [maxPlayers, setMaxPlayers] = useState([6]);
 	const [smallBlind, setSmallBlind] = useState(50);
-	const [minBuyIn, setMinBuyIn] = useState(200);
-	const [maxBuyIn, setMaxBuyIn] = useState(400);
+	const [minBuyIn, setMinBuyIn] = useState(500);
+	const [maxBuyIn, setMaxBuyIn] = useState(5000);
 	const [isPrivate, setIsPrivate] = useState(false);
 	const [password, setPassword] = useState("");
 	const [initialChips, setInitialChips] = useState([200]);
