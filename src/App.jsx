@@ -1,21 +1,23 @@
-import './App.css'
-import Login from './Components/Login/Login'
-import Home from './Components/Home/Inicio/Home.jsx';
+import HomePage from "./pages/HomePage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import Sala from "./components/Rooms/Sala.jsx";
+import NewRoom from "./components/Rooms/NewRoom.jsx";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sala from './Components/Rooms/Sala.jsx';
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 function App() {
-
-
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path='/Home' element={<Home />}/>
-        <Route path='/sala' element={<Sala/>}/>
-      </Routes>
-    </Router>
-  )
+	return (
+		<AuthProvider>
+			<Router>
+				<Routes>
+					<Route path="/" element={<LoginPage />} />
+					<Route path="/Home" element={<HomePage />} />
+					<Route path="/sala" element={<Sala />} />
+					<Route path="/room" element={<NewRoom />} />
+				</Routes>
+			</Router>
+		</AuthProvider>
+	);
 }
 
-export default App
+export default App;

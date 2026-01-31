@@ -1,0 +1,167 @@
+
+.sala-modal--container{
+  font-size: 18px;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.sala-modal--box{
+  display: flex;
+  background-color: #101E2D;
+  border: 2px solid #DBB271;
+  border-radius: 12px;
+  padding: 4px 0px 12px 0;
+  color: #eee;
+  width: 800px;
+  min-width: 300px;
+  max-width: 90%;
+  min-height: 200px;
+  max-height: 70vh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.sala-modal--exit-btn{
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: -12px;
+  right: -12px;
+  background-color: #222;
+  border-radius: 50%;
+  padding: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  border: 1px solid #aaa;
+}
+
+.sala-modal--exit-btn svg{
+  margin-left: 1px;
+  width: 60%;
+  color: #DBB271;
+}
+
+
+/* no hay salas container */
+
+.no-salas--container{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+}
+
+/* table css */
+
+.table--container{
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 16px;
+}
+
+table thead{
+  position: sticky;
+  top: 0;
+}
+
+th, td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #444;
+  text-align: center;
+}
+
+tr{
+  padding: 0.5rem;
+}
+
+.table--container button {
+  background-color: #388E3C;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+
+.table--container button:hover:not(:disabled) {
+  background-color: #2e7031; /* Verde un poco más oscuro para el hover */
+}
+
+.table--container button:disabled {
+  background-color: #388E3C; /* Mismo verde */
+  opacity: 0.5;              /* Más tenue para parecer inactivo */
+}
+
+.cargando-salas--container{
+  align-self: center;
+}
+
+/* sala private svg */
+
+.table--sala-name div{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+td svg{
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* join-room-modal--input-password-container */
+
+.join-room-modal--input-password-container div{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.join-room-modal--input-password-container input{
+  padding: 2px;
+}
+.join-room-modal--input-password-container svg{
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+
+/* money in game modal */
+
+.money-in-game--modal{
+  position: absolute;
+  width: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  height: 300px;
+}
+
+
