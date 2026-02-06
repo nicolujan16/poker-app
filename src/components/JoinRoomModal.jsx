@@ -40,7 +40,7 @@ const JoinRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
 	// --- LÓGICA DE UNIÓN NUEVA (Volver a la mesa) ---
 	const handleRejoin = (roomId) => {
 		onClose();
-		navigate(`/sala?id=${roomId}`);
+		navigate(`/room?id=${roomId}`);
 	};
 
 	// --- LÓGICA DE UNIÓN ESTÁNDAR ---
@@ -57,7 +57,7 @@ const JoinRoomModal = ({ isOpen, onClose, onCreateRoom }) => {
 
 			if (response.statusCode === 200 || response.status === 200) {
 				onClose();
-				navigate(`/sala?id=${roomID}`);
+				navigate(`/room?id=${roomID}`);
 			} else {
 				throw new Error(response.message || "No se pudo unir a la sala");
 			}

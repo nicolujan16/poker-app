@@ -162,7 +162,7 @@ const CreateRoomModal = ({ isOpen, onClose, currentUser }) => {
 				// Ajusta esto según tus rutas reales
 				setTimeout(() => {
 					onClose();
-					navigate(`/sala?id=${roomName}`);
+					navigate(`/room?id=${roomName}`);
 				}, 1500);
 			} else {
 				throw new Error(response.message || "Error desconocido");
